@@ -17,4 +17,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  optimizeDeps: {
+    include: ['hls.js', 'shaka-player'],
+  },
 })

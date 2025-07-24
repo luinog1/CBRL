@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Cinemeta",
+    "url": "https://v3-cinemeta.strem.io/manifest.json",
+    "description": "Official Stremio catalog addon with movies and series metadata"
+  },
+  {
+    "name": "OpenSubtitles",
+    "url": "https://opensubtitles-v3.strem.io/manifest.json",
+    "description": "Subtitles addon powered by OpenSubtitles"
+  },
+  {
+    "name": "RARBG",
+    "url": "https://rarbg-v2.strem.io/manifest.json",
+    "description": "Torrent streams from RARBG"
+  }
+]
