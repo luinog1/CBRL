@@ -1,0 +1,22 @@
+modules = ["nodejs-20"]
+hidden = [".config", "package-lock.json"]
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
+
+[nix]
+channel = "stable-23_11"
+
+[unitTest]
+language = "nodejs"
+
+[deployment]
+publicDir = "dist"
+deploymentTarget = "static"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[env]
+NODE_ENV = "development"
