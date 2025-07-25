@@ -32,7 +32,7 @@ export default {
           800: '#1e293b',
           900: '#0f172a',
         },
-        border: "#e2e8f0" // Using a direct hex color instead of CSS variable
+        border: "#e2e8f0" // Direct color definition
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

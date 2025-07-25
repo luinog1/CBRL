@@ -1,0 +1,8 @@
+{
+  "addons": [
+    {
+      "name": "TMDB",
+      "manifestUrl": "https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json"
+    }
+  ]
+}

@@ -145,3 +145,12 @@ export function AddonProvider({ children }: AddonProviderProps) {
     </AddonContext.Provider>
   )
 }
+
+const loadAddons = async () => {
+  try {
+    const response = await fetch('https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Addon loading error:', error);
+  }
+};
