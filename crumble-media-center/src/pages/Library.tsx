@@ -57,7 +57,7 @@ export default function Library() {
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 filter === tab.key
                   ? 'bg-primary-500 text-white'
-                  : 'text-dark-300 hover:text-white hover:bg-dark-700'
+                  : 'text-white hover:bg-dark-700'
               }`}
             >
               {tab.label} ({tab.count})

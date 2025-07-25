@@ -1,11 +1,17 @@
 import React, { useState } from 'react'
-import { Settings as SettingsIcon, Wifi, Download, Palette, Globe, Info } from 'lucide-react'
+import { Settings as SettingsIcon, Wifi, Download, Palette, Globe, Info, Trash2, RefreshCw } from 'lucide-react'
 import { useAddons } from '../contexts/AddonContext'
 import { getRecommendedPlayers } from '../utils/deepLinks'
 
 export default function Settings() {
-  const { addons, refreshAddons, loading } = useAddons()
+  const { addons, refreshAddons, loading, removeAddon } = useAddons()
   const [activeTab, setActiveTab] = useState('general')
+  const [newAddonUrl, setNewAddonUrl] = useState('')
+  const [addonError, setAddonError] = useState('')
+  const [addonSuccess, setAddonSuccess] = useState(false)
+  
+  // TMDB example addon URL
+  const exampleTmdbUrl = 'https://v3-cinemeta.strem.io/manifest.json'
 
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
@@ -31,7 +37,7 @@ export default function Settings() {
                 className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
                   activeTab === tab.id
                     ? 'bg-primary-500 text-white'
-                    : 'text-dark-300 hover:text-white hover:bg-dark-700'
+                    : 'text-white hover:bg-dark-700'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -90,40 +96,182 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold">Addons</h3>
                 <button
-                  onClick={refreshAddons}
-                  disabled={loading}
-                  className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 rounded-lg transition-colors"
-                >
-                  {loading ? 'Refreshing...' : 'Refresh Addons'}
-                </button>
+                onClick={() => refreshAddons()}
+                disabled={loading}
+                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 rounded-lg transition-colors"
+              >
+                {loading ? 'Refreshing...' : 'Refresh Addons'}
+              </button>
               </div>
 
               <div className="space-y-4">
+                <div className="p-4 bg-dark-800 rounded-lg">
+                  <h4 className="font-medium mb-2">Add New Addon</h4>
+                  <div className="mb-4 p-3 bg-dark-700 rounded-lg text-sm">
+                    <p className="text-dark-400 mb-2">Addon example:</p>
+                    <code className="block p-2 bg-dark-800 rounded text-primary-400 break-all">
+                      {exampleTmdbUrl}
+                    </code>
+                  </div>
+                  <form 
+                    className="flex space-x-2"
+                    onSubmit={async (e) => {
+                      e.preventDefault()
+                      if (!newAddonUrl) return
+                      
+                      setAddonError('')
+                      setAddonSuccess(false)
+                      
+                      try {
+                        // First validate the URL format
+                        if (!newAddonUrl.startsWith('http')) {
+                          throw new Error('Please enter a valid URL starting with http:// or https://')
+                        }
+                        
+                        // Check if manifest exists
+                        const manifestCheck = await fetch(newAddonUrl)
+                        if (!manifestCheck.ok) {
+                          throw new Error('Could not load addon manifest from this URL')
+                        }
+                        
+                        // Get manifest to extract name
+                        const manifest = await manifestCheck.json()
+                        
+                        const response = await fetch('/addons.json')
+                        const currentAddons = await response.json()
+                        
+                        // Check if addon already exists
+                        if (currentAddons.addons.some((a: { manifestUrl: string }) => a.manifestUrl === newAddonUrl)) {
+                          throw new Error('This addon is already installed')
+                        }
+                        
+                        const updatedAddons = {
+                          addons: [
+                            ...currentAddons.addons,
+                            {
+                              name: manifest.name || 'Custom Addon',
+                              manifestUrl: newAddonUrl,
+                              description: manifest.description || 'User-added addon'
+                            }
+                          ]
+                        }
+                        
+                        await fetch('/addons.json', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(updatedAddons)
+                        })
+                        
+                        setNewAddonUrl('')
+                        setAddonSuccess(true)
+                        refreshAddons()
+                      } catch (err) {
+                        setAddonError(err instanceof Error ? err.message : 'Failed to add addon')
+                      }
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={newAddonUrl}
+                      onChange={(e) => setNewAddonUrl(e.target.value)}
+                      placeholder="Enter addon manifest URL"
+                      className="flex-1 px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+                      disabled={!newAddonUrl}
+                    >
+                      Add
+                    </button>
+                  </form>
+                  {addonError && (
+                    <p className="mt-2 text-sm text-red-500">{addonError}</p>
+                  )}
+                  {addonSuccess && (
+                    <p className="mt-2 text-sm text-green-500">Addon added successfully!</p>
+                  )}
+                </div>
+
                 {addons.map(addon => (
                   <div key={addon.id} className="p-4 bg-dark-800 rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium">{addon.name}</h4>
+                        <div className="flex items-center space-x-2">
+                          <h4 className="font-medium">{addon.name}</h4>
+                          {addon.id.startsWith('tmdb') && (
+                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                              TMDB
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-dark-400 mt-1">{addon.description}</p>
                         <div className="flex items-center space-x-4 mt-2 text-xs text-dark-500">
                           <span>Version {addon.version}</span>
                           <span>Types: {addon.types.join(', ')}</span>
                           <span>Resources: {addon.resources.join(', ')}</span>
                         </div>
+                        <div className="mt-2">
+                          <code className="text-xs text-dark-400 break-all">{addon.manifestUrl || addon.id}</code>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Active" />
+                        <button 
+                          onClick={() => removeAddon(addon)}
+                          className="p-1 text-dark-400 hover:text-red-400 transition-colors"
+                          title="Remove addon"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (addon) {
+                              refreshAddons([addon])
+                            }
+                          }}
+                          className="p-1 text-dark-400 hover:text-primary-400 transition-colors"
+                          title="Refresh addon"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
 
                 {addons.length === 0 && !loading && (
-                  <div className="text-center py-8 text-dark-400">
-                    <Wifi className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No addons loaded</p>
-                  </div>
-                )}
+              <div className="text-center py-8 text-dark-400">
+                <Wifi className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No addons loaded</p>
+              </div>
+            )}
+
+            {addons.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="font-medium">Manage Addons</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => refreshAddons()}
+                    className="p-3 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                    <span>Refresh All Addons</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (confirm('Are you sure you want to remove all addons?')) {
+                        addons.forEach(addon => removeAddon(addon))
+                      }
+                    }}
+                    className="p-3 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors flex items-center justify-center space-x-2 text-red-400"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    <span>Remove All Addons</span>
+                  </button>
+                </div>
+              </div>
+            )}
               </div>
             </div>
           )}

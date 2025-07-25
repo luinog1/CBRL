@@ -136,7 +136,7 @@ export default function Search() {
                       className={`px-3 py-1 rounded-full text-sm transition-colors ${
                         selectedType === type.value
                           ? 'bg-primary-500 text-white'
-                          : 'bg-dark-600 hover:bg-dark-500'
+                          : 'text-white bg-dark-600 hover:bg-dark-500'
                       }`}
                     >
                       {type.label}
@@ -154,7 +154,7 @@ export default function Search() {
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
                       !selectedGenre
                         ? 'bg-primary-500 text-white'
-                        : 'bg-dark-600 hover:bg-dark-500'
+                        : 'text-white bg-dark-600 hover:bg-dark-500'
                     }`}
                   >
                     All Genres
@@ -166,7 +166,7 @@ export default function Search() {
                       className={`px-3 py-1 rounded-full text-sm transition-colors ${
                         selectedGenre === genre
                           ? 'bg-primary-500 text-white'
-                          : 'bg-dark-600 hover:bg-dark-500'
+                          : 'text-white bg-dark-600 hover:bg-dark-500'
                       }`}
                     >
                       {genre}

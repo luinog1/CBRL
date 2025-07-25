@@ -127,3 +127,36 @@ export interface SubtitleTrack {
   url: string
   active: boolean
 }
+
+export interface StremioStream extends Stream {
+  type?: 'url' | 'youtube' | 'torrent' | 'other'
+  quality?: string
+  size?: string
+  bitrate?: number
+  ytId?: string
+  infoHash?: string
+  fileIdx?: number
+  sources?: string[]
+}
+
+export interface StremioSubtitle extends Subtitle {
+  id: string
+  type?: 'srt' | 'vtt'
+  size?: number
+  fps?: number
+}
+
+export interface CatalogResponse {
+  metas: MetaItem[]
+  nextPage?: string | null
+  hasMore?: boolean
+}
+
+export interface StreamResponse {
+  streams: StremioStream[]
+  hasMore?: boolean
+}
+
+export interface SubtitleResponse {
+  subtitles: StremioSubtitle[]
+}
