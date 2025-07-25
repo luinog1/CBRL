@@ -97,7 +97,7 @@ export function AddonProvider({ children }: AddonProviderProps) {
   }
 
   const getStreams = async (type: string, id: string): Promise<Stream[]> => {
-    const results: Stream[] = []
+    let results: Stream[] = []  // Changed from const to let
 
     for (const addon of addons) {
       if (addon.resources.includes('stream')) {
@@ -112,14 +112,14 @@ export function AddonProvider({ children }: AddonProviderProps) {
 
     // Mock streams for development
     if (results.length === 0) {
-      results = [
+      results.push(...[
         {
           url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
           title: 'Sample Stream',
           name: 'Big Buck Bunny (Sample)',
           description: 'Sample video for testing'
         }
-      ]
+      ])
     }
 
     return results
