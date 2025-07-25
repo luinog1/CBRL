@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { MetaItem } from '../types'
 import { useAddons } from '../contexts/AddonContext'
 import { useProgress } from '../contexts/ProgressContext'
+import LoadingSpinner from '../components/LoadingSpinner'
 import HeroSection from '../components/HeroSection'
 import MediaCarousel from '../components/MediaCarousel'
 
@@ -75,17 +76,12 @@ export default function Home() {
 
         {/* Popular Movies */}
         <MediaCarousel
-          title="Popular Movies"
-          items={popularMovies}
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
+            <p className="text-dark-400">Loading content...</p>
+          </div>
           loading={loading}
-        />
-
-        {/* Popular Series */}
-        <MediaCarousel
-          title="Popular Series"
-          items={popularSeries}
-          loading={loading}
-        />
       </div>
     </div>
   )

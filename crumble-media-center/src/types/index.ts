@@ -3,6 +3,7 @@ export interface AddonManifest {
   name: string
   version: string
   description: string
+  manifestUrl?: string
   logo?: string
   background?: string
   types: string[]

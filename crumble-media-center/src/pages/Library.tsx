@@ -23,6 +23,7 @@ export default function Library() {
   }
 
   const getProgressPercentage = (item: typeof progress[0]) => {
+    if (!item.duration || item.duration <= 0) return 0
     return Math.round((item.currentTime / item.duration) * 100)
   }
 

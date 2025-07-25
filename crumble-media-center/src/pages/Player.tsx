@@ -10,6 +10,7 @@ import { useAddons } from '../contexts/AddonContext'
 import { useProgress } from '../contexts/ProgressContext'
 import { openInExternalPlayer } from '../utils/deepLinks'
 import { formatTime, getCurrentSubtitle, parseSRT, parseVTT } from '../utils/subtitles'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function Player() {
   const { type, id } = useParams<{ type: string; id: string }>()
@@ -240,7 +241,7 @@ export default function Player() {
   const handleProgressClick = (e: React.MouseEvent) => {
     const progress = progressRef.current
     const video = videoRef.current
-    if (!progress || !video) return
+    if (!progress || !video || !video.duration) return
 
     const rect = progress.getBoundingClientRect()
     const percent = (e.clientX - rect.left) / rect.width
@@ -356,7 +357,9 @@ export default function Player() {
           {/* Progress bar */}
           <div
             ref={progressRef}
-            className="w-full h-1 bg-white/30 rounded-full cursor-pointer"
+            style={{ 
+              width: `${playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0}%` 
+            }}
             onClick={handleProgressClick}
           >
             <div

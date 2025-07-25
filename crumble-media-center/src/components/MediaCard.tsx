@@ -53,7 +53,7 @@ export default function MediaCard({ item, showProgress = false, className = '' }
         )}
 
         {/* Rating badge */}
-        {item.imdbRating && (
+        {item.imdbRating && item.imdbRating > 0 && (
           <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm rounded px-2 py-1 flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-400 fill-current" />
             <span className="text-xs font-medium">{item.imdbRating}</span>

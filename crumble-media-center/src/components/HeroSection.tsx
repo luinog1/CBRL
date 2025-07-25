@@ -65,7 +65,7 @@ export default function HeroSection({ item, loading = false }: HeroSectionProps)
             {item.imdbRating && (
               <div className="flex items-center space-x-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span>{item.imdbRating}</span>
+                <span>{item.imdbRating.toFixed(1)}</span>
               </div>
             )}
 

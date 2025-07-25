@@ -23,6 +23,8 @@ export async function loadAddons(): Promise<AddonManifest[]> {
         const manifestResponse = await fetch(config.url)
         if (manifestResponse.ok) {
           const manifest: AddonManifest = await manifestResponse.json()
+          // Store the original URL for base URL extraction
+          manifest.manifestUrl = config.url
           manifests.push(manifest)
         }
       } catch (err) {
@@ -50,13 +52,18 @@ export async function fetchCatalog(
     url += `?genre=${encodeURIComponent(genre)}`
   }
 
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch catalog: ${response.statusText}`)
-  }
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch catalog: ${response.statusText}`)
+    }
 
-  const data = await response.json()
-  return data.metas || []
+    const data = await response.json()
+    return data.metas || []
+  } catch (error) {
+    console.warn(`Failed to fetch catalog from ${addon.name}:`, error)
+    return []
+  }
 }
 
 export async function fetchMeta(
@@ -67,13 +74,18 @@ export async function fetchMeta(
   const baseUrl = getAddonBaseUrl(addon)
   const url = `${baseUrl}/meta/${type}/${id}.json`
 
-  const response = await fetch(url)
-  if (!response.ok) {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.meta || null
+  } catch (error) {
+    console.warn(`Failed to fetch meta from ${addon.name}:`, error)
     return null
   }
-
-  const data = await response.json()
-  return data.meta || null
 }
 
 export async function fetchStreams(
@@ -84,17 +96,33 @@ export async function fetchStreams(
   const baseUrl = getAddonBaseUrl(addon)
   const url = `${baseUrl}/stream/${type}/${id}.json`
 
-  const response = await fetch(url)
-  if (!response.ok) {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      return []
+    }
+
+    const data = await response.json()
+    return data.streams || []
+  } catch (error) {
+    console.warn(`Failed to fetch streams from ${addon.name}:`, error)
     return []
   }
-
-  const data = await response.json()
-  return data.streams || []
 }
 
 function getAddonBaseUrl(addon: AddonManifest): string {
-  // Extract base URL from manifest URL
-  const manifestUrl = new URL(addon.id || '')
-  return `${manifestUrl.protocol}//${manifestUrl.host}`
+  // Use the stored manifest URL to extract base URL
+  if (addon.manifestUrl) {
+    const manifestUrl = new URL(addon.manifestUrl)
+    return `${manifestUrl.protocol}//${manifestUrl.host}`
+  }
+  
+  // Fallback: try to construct from addon ID if it's a URL
+  try {
+    const url = new URL(addon.id)
+    return `${url.protocol}//${url.host}`
+  } catch {
+    // If addon.id is not a URL, return a default or throw error
+    throw new Error(`Cannot determine base URL for addon ${addon.name}`)
+  }
 }

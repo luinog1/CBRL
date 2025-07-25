@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Search as SearchIcon, Filter, X } from 'lucide-react'
 import { MetaItem } from '../types'
 import { useAddons } from '../contexts/AddonContext'
+import LoadingSpinner from '../components/LoadingSpinner'
 import MediaCard from '../components/MediaCard'
 
 const GENRES = [
@@ -182,9 +183,12 @@ export default function Search() {
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-dark-800 rounded-lg animate-pulse" />
-            ))}
+            <div className="col-span-full flex justify-center py-12">
+              <div className="text-center">
+                <LoadingSpinner size="lg" className="mx-auto mb-4" />
+                <p className="text-dark-400">Loading content...</p>
+              </div>
+            </div>
           </div>
         ) : filteredContent.length > 0 ? (
           <>
