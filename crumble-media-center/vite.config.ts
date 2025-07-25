@@ -12,6 +12,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    allowedHosts: ['36f0f32a-672b-417a-ab43-8155a485499c-00-14khaq0azwjlz.kirk.replit.dev']
   },
   build: {
     outDir: 'dist',
