@@ -3,13 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --border: 214.3 31.8% 91.4%; /* Add this line - a light gray color */
-  }
-  
-  * {
+  /* Remove this line or replace it with a standard Tailwind border class */
+  /* * {
     @apply border-border;
-  }
+  } */
 
   body {
     @apply bg-dark-900 text-white;
