@@ -139,7 +139,6 @@ export function AddonProvider({ children }: AddonProviderProps) {
     refreshAddons,
   }
 
-  // Remove the duplicate loadAddons function below
   return (
     <AddonContext.Provider value={value}>
       {children}
@@ -147,7 +146,7 @@ export function AddonProvider({ children }: AddonProviderProps) {
   )
 }
 
-// Remove this duplicate loadAddons function completely
+// Remove everything from here down
 const loadAddons = async () => {
   try {
     const response = await fetch('https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json');
