@@ -58,6 +58,17 @@ export default function Home() {
       poster: p.poster,
     } as MetaItem))
 
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-dark-400">Loading content...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full overflow-y-auto">
       {/* Hero Section */}
@@ -76,12 +87,15 @@ export default function Home() {
 
         {/* Popular Movies */}
         <MediaCarousel
-        <div className="h-full flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-dark-400">Loading content...</p>
-          </div>
-          loading={loading}
+          title="Popular Movies"
+          items={popularMovies}
+        />
+
+        {/* Popular Series */}
+        <MediaCarousel
+          title="Popular Series"
+          items={popularSeries}
+        />
       </div>
     </div>
   )
