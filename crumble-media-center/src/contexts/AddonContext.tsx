@@ -139,6 +139,7 @@ export function AddonProvider({ children }: AddonProviderProps) {
     refreshAddons,
   }
 
+  // Remove the duplicate loadAddons function below
   return (
     <AddonContext.Provider value={value}>
       {children}
