@@ -23,12 +23,12 @@ export default function MediaCard({ item, showProgress = false, className = '' }
       to={`/details/${item.type}/${item.id}`}
       className={`group relative block ${className}`}
     >
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-dark-800">
+      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-dark-800/50 backdrop-blur-sm">
         {item.poster ? (
           <img
             src={item.poster}
             alt={item.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
             loading="lazy"
           />
         ) : (
@@ -62,17 +62,17 @@ export default function MediaCard({ item, showProgress = false, className = '' }
       </div>
 
       {/* Title and metadata */}
-      <div className="mt-3 space-y-1">
-        <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary-400 transition-colors">
+      <div className="mt-3 space-y-1.5">
+        <h3 className="font-semibold text-sm text-white line-clamp-2 group-hover:text-primary-400 transition-colors">
           {item.name}
         </h3>
 
-        <div className="flex items-center space-x-2 text-xs text-dark-400">
+        <div className="flex items-center space-x-2 text-xs text-white/70">
           {item.year && <span>{item.year}</span>}
           {item.runtime && (
             <>
               <span>•</span>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1.5">
                 <Clock className="w-3 h-3" />
                 <span>{item.runtime}</span>
               </div>
@@ -81,7 +81,7 @@ export default function MediaCard({ item, showProgress = false, className = '' }
         </div>
 
         {showProgress && progress && (
-          <div className="text-xs text-primary-400">
+          <div className="text-xs font-medium text-primary-400">
             {progress.completed ? 'Completed' : `${progressPercentage}% watched`}
           </div>
         )}
