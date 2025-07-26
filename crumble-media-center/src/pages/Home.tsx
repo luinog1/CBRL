@@ -124,17 +124,33 @@ if (addons.length === 0) {
 }
 
 if (contentError) {
+  // Check if there's no TMDB API key set
+  const hasTmdbApiKey = localStorage.getItem('tmdb_api_key');
+  const isTmdbKeyError = !hasTmdbApiKey && addons.some(addon => addon.id.startsWith('tmdb'));
+  
   return (
     <div className="h-full flex items-center justify-center">
       <div className="text-center">
         <AlertCircle className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
         <p className="text-white/70 text-lg mb-4">{contentError}</p>
-        <Link 
-          to="/settings" 
-          className="mt-4 inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-semibold transition-all hover:scale-105"
-        >
-          Check Addons
-        </Link>
+        {isTmdbKeyError ? (
+          <>
+            <p className="text-white/70 mb-4">You need to set up your TMDB API key to fetch content.</p>
+            <Link 
+              to="/settings?tab=api" 
+              className="mt-4 inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-semibold transition-all hover:scale-105"
+            >
+              Set TMDB API Key
+            </Link>
+          </>
+        ) : (
+          <Link 
+            to="/settings" 
+            className="mt-4 inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-semibold transition-all hover:scale-105"
+          >
+            Check Addons
+          </Link>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Settings as SettingsIcon, Wifi, Download, Palette, Globe, Info, Trash2, RefreshCw } from 'lucide-react'
 import { useAddons } from '../contexts/AddonContext'
 import { getRecommendedPlayers } from '../utils/deepLinks'
+import { useLocation } from 'react-router-dom'
 
 export default function Settings() {
   const { addons, refreshAddons, loading, removeAddon } = useAddons()
@@ -9,6 +10,20 @@ export default function Settings() {
   const [newAddonUrl, setNewAddonUrl] = useState('')
   const [addonError, setAddonError] = useState('')
   const [addonSuccess, setAddonSuccess] = useState(false)
+  const [tmdbApiKey, setTmdbApiKey] = useState(() => localStorage.getItem('tmdb_api_key') || '')
+  const [tmdbKeySuccess, setTmdbKeySuccess] = useState(false)
+  
+  // Get the location to check for URL parameters
+  const location = useLocation()
+  
+  // Set active tab based on URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const tabParam = params.get('tab')
+    if (tabParam && ['general', 'addons', 'api', 'players', 'appearance', 'about'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [location])
   
   // TMDB example addon URL
   const exampleTmdbUrl = 'https://v3-cinemeta.strem.io/manifest.json'
@@ -16,6 +31,7 @@ export default function Settings() {
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
     { id: 'addons', label: 'Addons', icon: Wifi },
+    { id: 'api', label: 'API Keys', icon: Globe },
     { id: 'players', label: 'External Players', icon: Download },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'about', label: 'About', icon: Info },
@@ -306,6 +322,57 @@ export default function Settings() {
                     </a>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'api' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold">API Keys</h3>
+
+              <div className="space-y-4">
+                <div className="p-4 bg-dark-800 rounded-lg">
+                  <h4 className="font-medium mb-2">TMDB API Key</h4>
+                  <p className="text-sm text-dark-400 mb-4">
+                    Enter your TMDB API key to fetch metadata and populate the home screen with catalogs.
+                    You can get a free API key by creating an account at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:underline">themoviedb.org</a>.
+                  </p>
+                  <form 
+                    className="flex space-x-2"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      if (!tmdbApiKey) return
+                      
+                      // Save to localStorage
+                      localStorage.setItem('tmdb_api_key', tmdbApiKey)
+                      setTmdbKeySuccess(true)
+                      
+                      // Clear success message after 3 seconds
+                      setTimeout(() => setTmdbKeySuccess(false), 3000)
+                      
+                      // Refresh addons to use the new API key
+                      refreshAddons()
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={tmdbApiKey}
+                      onChange={(e) => setTmdbApiKey(e.target.value)}
+                      placeholder="Enter your TMDB API key"
+                      className="flex-1 px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+                      disabled={!tmdbApiKey}
+                    >
+                      Save
+                    </button>
+                  </form>
+                  {tmdbKeySuccess && (
+                    <p className="mt-2 text-sm text-green-500">API key saved successfully!</p>
+                  )}
+                </div>
               </div>
             </div>
           )}

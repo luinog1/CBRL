@@ -10,15 +10,14 @@ import {
 
 import { 
   loadAddons, 
-  fetchCatalog, 
-  fetchMeta, 
   fetchStreams,
   fetchSubtitles,
-  loadSubtitleContent, // Make sure this is imported
+  loadSubtitleContent,
   getCatalogFilters,
   parseStreamUrl
 } from '../utils/addonApi'
 import { getAllMockContent, mockMovies, mockSeries } from '../data/mockData'
+import { MetadataManager } from '../utils/MetadataManager'
 
 interface AddonContextType {
   addons: AddonManifest[]
@@ -37,7 +36,7 @@ interface AddonContextType {
 
 const AddonContext = createContext<AddonContextType | undefined>(undefined)
 
-export const useAddons = () => {
+export function useAddons() {
   const context = useContext(AddonContext)
   if (context === undefined) {
     throw new Error('useAddons must be used within an AddonProvider')
@@ -53,6 +52,7 @@ export function AddonProvider({ children }: AddonProviderProps) {
   const [addons, setAddons] = useState<AddonManifest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [metadataManager, setMetadataManager] = useState<MetadataManager | null>(null)
 
   const refreshAddons = async (specificAddons?: AddonManifest[]) => {
   try {
@@ -72,10 +72,24 @@ export function AddonProvider({ children }: AddonProviderProps) {
         }
       }
       setAddons(updatedAddons)
+      
+      // Update metadata manager with new addons
+      if (metadataManager) {
+        metadataManager.updateAddons(updatedAddons)
+      } else {
+        setMetadataManager(new MetadataManager(updatedAddons))
+      }
     } else {
       // Refresh all addons
       const loadedAddons = await loadAddons()
       setAddons(loadedAddons)
+      
+      // Create or update metadata manager
+      if (metadataManager) {
+        metadataManager.updateAddons(loadedAddons)
+      } else {
+        setMetadataManager(new MetadataManager(loadedAddons))
+      }
     }
   } catch (err) {
     setError(err instanceof Error ? err.message : 'Failed to load addons')
@@ -115,81 +129,47 @@ const removeAddon = async (addon: AddonManifest) => {
 }
 
   const getCatalog = async (type: string, catalogId = 'top', genre?: string): Promise<MetaItem[]> => {
-    let results: MetaItem[] = []
-
-    // First try TMDB addon if available
-    const tmdbAddon = addons.find(addon => addon.id.startsWith('tmdb'))
-    if (tmdbAddon) {
+    // Use MetadataManager if available
+    if (metadataManager) {
       try {
-        const items = await fetchCatalog(tmdbAddon, type, catalogId, genre)
-        if (items.length > 0) {
-          return items // Return TMDB results directly if available
-        }
+        return await metadataManager.getCatalog(type, catalogId, genre);
       } catch (err) {
-        console.warn('Failed to fetch from TMDB:', err)
+        console.warn('Failed to fetch catalog from MetadataManager:', err);
       }
     }
-
-    // Try other addons if TMDB failed or not available
-    for (const addon of addons) {
-      if (!addon.id.startsWith('tmdb') && addon.types.includes(type)) {
-        try {
-          const items = await fetchCatalog(addon, type, catalogId, genre)
-          results.push(...items)
-        } catch (err) {
-          console.warn(`Failed to fetch catalog from ${addon.name}:`, err)
-        }
-      }
+    
+    // Fallback to mock data if MetadataManager is not available or fails
+    let results: MetaItem[] = [];
+    if (type === 'movie') {
+      results = mockMovies;
+    } else if (type === 'series') {
+      results = mockSeries;
+    } else {
+      results = getAllMockContent();
     }
-
-    // If still no results, use mock data
-    if (results.length === 0) {
-      if (type === 'movie') {
-        results = mockMovies
-      } else if (type === 'series') {
-        results = mockSeries
-      } else {
-        results = getAllMockContent()
-      }
-    }
-
-    // Remove duplicates based on ID
-    const uniqueResults = results.filter((item, index, self) => 
-      index === self.findIndex(t => t.id === item.id)
-    )
-
-    return uniqueResults
+    
+    return results;
   }
 
   const getMeta = async (type: string, id: string): Promise<MetaItem | null> => {
-    // Check if this is a TMDB ID
-    if (id.startsWith('tmdb:')) {
-      const tmdbAddon = addons.find(addon => addon.id.startsWith('tmdb'))
-      if (tmdbAddon) {
-        try {
-          const meta = await fetchMeta(tmdbAddon, type, id)
-          if (meta) return meta
-        } catch (err) {
-          console.warn('Failed to fetch from TMDB:', err)
-        }
-      }
+    // Validate type parameter
+    if (type !== 'movie' && type !== 'series') {
+      console.warn(`Invalid type: ${type}. Must be 'movie' or 'series'`);
+      return null;
     }
 
-    // Try other addons if not TMDB or TMDB failed
-    for (const addon of addons) {
-      if (!addon.id.startsWith('tmdb') && addon.types.includes(type)) {
-        try {
-          const meta = await fetchMeta(addon, type, id)
-          if (meta) return meta
-        } catch (err) {
-          console.warn(`Failed to fetch meta from ${addon.name}:`, err)
-        }
+    // Use MetadataManager if available
+    if (metadataManager) {
+      try {
+        return await metadataManager.getMetadata(type, id);
+      } catch (err) {
+        console.warn('Failed to fetch metadata from MetadataManager:', err);
       }
     }
-
-    // Fallback to mock data
-    const mockContent = getAllMockContent()
-    return mockContent.find(item => item.id === id) || null
+    
+    // Fallback to mock data if MetadataManager is not available or fails
+    const mockContent = getAllMockContent();
+    return mockContent.find(item => item.id === id) || null;
   }
 
   const getStreams = async (type: string, id: string): Promise<Stream[]> => {
@@ -223,6 +203,15 @@ const removeAddon = async (addon: AddonManifest) => {
 
   useEffect(() => {
     refreshAddons()
+    
+    // Clean metadata cache periodically
+    const cacheCleanInterval = setInterval(() => {
+      if (metadataManager) {
+        metadataManager.cleanCache();
+      }
+    }, 60 * 60 * 1000); // Clean every hour
+    
+    return () => clearInterval(cacheCleanInterval);
   }, [])
 
   const getSubtitles = async (type: string, id: string, videoId?: string): Promise<StremioSubtitle[]> => {
