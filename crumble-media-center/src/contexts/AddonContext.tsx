@@ -37,7 +37,7 @@ interface AddonContextType {
 
 const AddonContext = createContext<AddonContextType | undefined>(undefined)
 
-export function useAddons() {
+export const useAddons = () => {
   const context = useContext(AddonContext)
   if (context === undefined) {
     throw new Error('useAddons must be used within an AddonProvider')

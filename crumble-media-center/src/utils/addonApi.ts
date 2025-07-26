@@ -67,7 +67,7 @@ export async function loadAddons(): Promise<AddonManifest[]> {
     if (addonConfigs.length === 0) {
       addonConfigs.push({
         name: 'TMDB Addon',
-        url: 'https://tmdb.elfhosted.com/N4IgNghgdg5grhGBTEAuESoFoCqBlEAGhAGcAXAJyQgFsBLWNAbQF1iBjCMiMAexhLNQdACZoQZGiIBGAOjK8ADkQkBPRSnQ1eANzopiUWppAAFJXEgUVJABa8A7gEkoACV41NlOEgC+hYTF0SRl5JRUydRMSJAp9QUNjcXNFSwhrYjtHF3dPNG8/AJBRcRC5VWoMtQ1xbT0DECM89ABNSpt7ZzcPLwoff0DSqXL24kia9Bi4pATGpNbR0k6cnvy+wsHg4dlIWARkCKja3X0VJpMAGWh4RAasrtze/qKSrdDdm4Oxo8nY+LP5iArntbh1st1mgUBsUghJtpRMCIGDBDhMQHVTolmiAACpUKBIxiZZYQp4bGFDUIIgnI1HRP4zAHYvGI2nE8GPNb9NggTjkADCvDgUDIaAArL4gA/manifest.json',
+        url: 'https://stremio-tmdb.elfhosted.com/manifest.json',
         description: 'Default TMDB metadata provider'
       })
     }
@@ -102,8 +102,9 @@ export async function fetchCatalog(
   if (addon.id.startsWith('tmdb')) {
     try {
       const apiKey = '2e058e0ec48b5f209d42c8707f97d6c8';
-      const mediaType = type === 'movie' ? 'movie' : 'tv';
-      let url = `https://api.themoviedb.org/3/${mediaType}/popular?api_key=${apiKey}&language=en-US&page=1`;
+      const mediaType: 'movie' | 'series' = type === 'movie' ? 'movie' : 'series';
+      const tmdbType = mediaType === 'movie' ? 'movie' : 'tv';
+      let url = `https://api.themoviedb.org/3/${tmdbType}/popular?api_key=${apiKey}&language=en-US&page=1`;
       
       if (genre) {
         const genreMap: { [key: string]: number } = {
@@ -129,7 +130,7 @@ export async function fetchCatalog(
         };
         const genreId = genreMap[genre];
         if (genreId) {
-          url = `https://api.themoviedb.org/3/discover/${mediaType}?api_key=${apiKey}&with_genres=${genreId}`;
+          url = `https://api.themoviedb.org/3/discover/${tmdbType}?api_key=${apiKey}&with_genres=${genreId}`;
         }
       }
 
@@ -140,7 +141,7 @@ export async function fetchCatalog(
 
       const data = await response.json();
       return data.results.map((item: any) => ({
-        id: `tmdb:${mediaType}/${item.id}`,
+        id: `tmdb:${tmdbType}/${item.id}`,
         type: type,
         name: item.title || item.name,
         poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
