@@ -1,9 +1,9 @@
 {
   "addons": [
     {
-      "name": "TMDB",
-      "manifestUrl": "https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json",
-      "description": "Official TMDB metadata provider"
+      "name": "Crumble TMDB",
+      "manifestUrl": "http://localhost:7001/manifest.json",
+      "description": "Local TMDB metadata provider that requires your own API key"
     }
   ]
 }

@@ -99,7 +99,7 @@ export class MetadataManager {
         async () => {
           // First try TMDB addon if available and ID is TMDB format
           if (id.startsWith('tmdb:')) {
-            const tmdbAddon = this.addons.find(addon => addon.id.startsWith('tmdb'));
+            const tmdbAddon = this.addons.find(addon => addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb'));
             if (tmdbAddon) {
               try {
                 const meta = await fetchMeta(tmdbAddon, type as 'movie' | 'series', id);
@@ -174,10 +174,16 @@ export class MetadataManager {
           let source = 'multiple';
 
           // First try TMDB addon if available
-          const tmdbAddon = this.addons.find(addon => addon.id.startsWith('tmdb'));
+          const tmdbAddon = this.addons.find(addon => addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb'));
           if (tmdbAddon) {
             try {
-              const items = await fetchCatalog(tmdbAddon, type, catalogId, genre);
+              // Map catalog IDs for TMDB addon
+              let tmdbCatalogId = catalogId;
+              if (catalogId === 'top' || catalogId === 'popular') {
+                tmdbCatalogId = 'tmdb_popular';
+              }
+              
+              const items = await fetchCatalog(tmdbAddon, type, tmdbCatalogId, genre);
               if (items.length > 0) {
                 return { data: items, source: tmdbAddon.id };
               }

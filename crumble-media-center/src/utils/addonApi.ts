@@ -99,10 +99,9 @@ export async function fetchCatalog(
   genre?: string
 ): Promise<MetaItem[]> {
   // Handle TMDB addon differently
-  if (addon.id.startsWith('tmdb')) {
+  if (addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb')) {
     try {
-      // Get user's API key from localStorage or use fallback
-      // Note: The fallback key is just a placeholder and should be replaced with a valid key by the user
+      // Get user's API key from localStorage
       const apiKey = localStorage.getItem('tmdb_api_key') || '';
       
       // If no API key is provided, return empty array
@@ -111,57 +110,26 @@ export async function fetchCatalog(
         return [];
       }
       
-      const mediaType = type === 'movie' ? 'movie' : 'tv';
-      let url = `https://api.themoviedb.org/3/${mediaType}/popular?api_key=${apiKey}&language=en-US&page=1`;
+      // For our custom TMDB addon server, use the base URL and append the API key as a query parameter
+      const baseUrl = getAddonBaseUrl(addon);
+      let url = `${baseUrl}/catalog/${type}/${catalogId}.json?apikey=${apiKey}`;
       
       if (genre) {
-        const genreMap: { [key: string]: number } = {
-          'Action': 28,
-          'Adventure': 12,
-          'Animation': 16,
-          'Comedy': 35,
-          'Crime': 80,
-          'Documentary': 99,
-          'Drama': 18,
-          'Family': 10751,
-          'Fantasy': 14,
-          'History': 36,
-          'Horror': 27,
-          'Music': 10402,
-          'Mystery': 9648,
-          'Romance': 10749,
-          'Science Fiction': 878,
-          'TV Movie': 10770,
-          'Thriller': 53,
-          'War': 10752,
-          'Western': 37
-        };
-        const genreId = genreMap[genre];
-        if (genreId) {
-          url = `https://api.themoviedb.org/3/discover/${mediaType}?api_key=${apiKey}&with_genres=${genreId}`;
-        }
+        url += `&genre=${encodeURIComponent(genre)}`;
       }
 
       const response = await fetch(url);
       if (!response.ok) {
+        // Check for specific error status codes
+        if (response.status === 401) {
+          console.error('Invalid TMDB API key. Please check your API key in Settings > API Keys.');
+          throw new Error('Invalid TMDB API key');
+        }
         throw new Error(`TMDB API error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      return data.results.map((item: any) => ({
-        id: `tmdb:${mediaType}/${item.id}`,
-        type: type,
-        name: item.title || item.name,
-        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-        background: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
-        description: item.overview,
-        releaseInfo: item.release_date || item.first_air_date,
-        year: new Date(item.release_date || item.first_air_date).getFullYear(),
-        genres: item.genre_ids?.map((id: number) => {
-          const genreEntry = Object.entries(genreMap).find(([_, val]) => val === id);
-          return genreEntry ? genreEntry[0] : '';
-        }).filter(Boolean) || []
-      }));
+      return data.metas || [];
     } catch (error) {
       console.warn('Failed to fetch TMDB catalog:', error);
       return [];
@@ -196,12 +164,9 @@ export async function fetchMeta(
   id: string
 ): Promise<MetaItem | null> {
   // First check if this is a TMDB-based addon
-  if (addon.id.startsWith('tmdb')) {
+  if (addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb')) {
     try {
-      // Extract TMDB ID from the format "tmdb:movie/12345" or "movie/12345"
-      const tmdbId = id.includes('/') ? id.split('/')[1] : id;
-      // Get user's API key from localStorage or use fallback
-      // Note: The fallback key is just a placeholder and should be replaced with a valid key by the user
+      // Get user's API key from localStorage
       const apiKey = localStorage.getItem('tmdb_api_key') || '';
       
       // If no API key is provided, return null
@@ -210,32 +175,22 @@ export async function fetchMeta(
         return null;
       }
       
-      // Map 'series' type to 'tv' for TMDB API
-      const tmdbType = type === 'series' ? 'tv' : type;
-      const url = `https://api.themoviedb.org/3/${tmdbType}/${tmdbId}?api_key=${apiKey}&language=en-US`;
+      // For our custom TMDB addon server, use the base URL and append the API key as a query parameter
+      const baseUrl = getAddonBaseUrl(addon);
+      const url = `${baseUrl}/meta/${type}/${id}.json?apikey=${apiKey}`;
 
       const response = await fetch(url);
       if (!response.ok) {
-        console.warn(`TMDB API error: ${response.statusText}`);
-        return null;
+        // Check for specific error status codes
+        if (response.status === 401) {
+          console.error('Invalid TMDB API key. Please check your API key in Settings > API Keys.');
+          throw new Error('Invalid TMDB API key');
+        }
+        throw new Error(`TMDB API error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
-      // Format response according to Stremio protocol
-      return {
-        id,
-        name: data.title || data.name,
-        description: data.overview,
-        poster: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : '',
-        background: data.backdrop_path ? `https://image.tmdb.org/t/p/original${data.backdrop_path}` : '',
-        type,
-        genres: data.genres?.map((g: any) => g.name) || [],
-        year: data.release_date ? new Date(data.release_date).getFullYear() : undefined,
-        runtime: data.runtime,
-        releaseInfo: data.release_date,
-        videos: type === 'series' ? [] : undefined
-      };
+      return data.meta || null;
     } catch (error) {
       console.warn('Failed to fetch TMDB metadata:', error);
       return null;

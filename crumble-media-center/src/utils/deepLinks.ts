@@ -15,9 +15,9 @@ export function openInExternalPlayer(streamUrl: string, title?: string) {
       fallback: `infusepro://x-callback-url/play?url=${encodedUrl}`
     },
     {
-      name: 'MX Player',
-      scheme: `intent://${streamUrl}#Intent;package=com.mxtech.videoplayer.ad;S.title=${encodedTitle};end`,
-      fallback: `intent://${streamUrl}#Intent;package=com.mxtech.videoplayer.pro;S.title=${encodedTitle};end`
+      name: 'Outplayrr',
+      scheme: `outplayrr://${encodedUrl}`,
+      fallback: `outplayrr://${encodedUrl}`
     }
   ]
 
@@ -65,21 +65,19 @@ export function getRecommendedPlayers() {
   switch (os) {
     case 'ios':
       return [
-        { name: 'Infuse 7', url: 'https://apps.apple.com/app/infuse-7/id1136220934' },
+        { name: 'Infuse', url: 'https://apps.apple.com/app/infuse-7/id1136220934' },
         { name: 'VLC', url: 'https://apps.apple.com/app/vlc-media-player/id650377962' },
-        { name: 'PlayerXtreme', url: 'https://apps.apple.com/app/playerxtreme-media-player/id456584471' }
+        { name: 'Outplayrr', url: 'https://apps.apple.com/app/outplayrr/id1449923287' }
       ]
     case 'android':
       return [
         { name: 'VLC', url: 'https://play.google.com/store/apps/details?id=org.videolan.vlc' },
-        { name: 'MX Player', url: 'https://play.google.com/store/apps/details?id=com.mxtech.videoplayer.ad' },
-        { name: 'Just Player', url: 'https://play.google.com/store/apps/details?id=com.brouken.player' }
+        { name: 'Outplayrr', url: 'https://play.google.com/store/apps/details?id=com.outplayrr.app' }
       ]
     default:
       return [
         { name: 'VLC', url: 'https://www.videolan.org/vlc/' },
-        { name: 'MPV', url: 'https://mpv.io/' },
-        { name: 'PotPlayer', url: 'https://potplayer.daum.net/' }
+        { name: 'Outplayrr', url: 'https://outplayrr.app/' }
       ]
   }
 }

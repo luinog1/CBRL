@@ -8,7 +8,7 @@ import Home from './pages/Home'
 import Search from './pages/Search'
 import Library from './pages/Library'
 import Settings from './pages/Settings'
-import Player from './pages/Player'
+import KSplayer from './pages/Player'
 import Details from './pages/Details'
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
         <ProgressProvider>
           <div className="min-h-screen bg-dark-900 text-white">
             <Routes>
-              <Route path="/player/:type/:id" element={<Player />} />
+              <Route path="/player/:type/:id" element={<KSplayer />} />
               <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route path="search" element={<Search />} />

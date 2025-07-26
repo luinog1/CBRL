@@ -12,7 +12,9 @@ import { openInExternalPlayer } from '../utils/deepLinks'
 import { formatTime, getCurrentSubtitle, parseSRT, parseVTT } from '../utils/subtitles'
 import LoadingSpinner from '../components/LoadingSpinner'
 
-export default function Player() {
+// KSplayer is the only internal player implementation
+
+export default function KSplayer() {
   const { type, id } = useParams<{ type: string; id: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()

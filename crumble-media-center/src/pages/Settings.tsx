@@ -12,6 +12,8 @@ export default function Settings() {
   const [addonSuccess, setAddonSuccess] = useState(false)
   const [tmdbApiKey, setTmdbApiKey] = useState(() => localStorage.getItem('tmdb_api_key') || '')
   const [tmdbKeySuccess, setTmdbKeySuccess] = useState(false)
+  const [tmdbKeyError, setTmdbKeyError] = useState<string | null>(null)
+  const [isValidating, setIsValidating] = useState(false)
   
   // Get the location to check for URL parameters
   const location = useLocation()
@@ -339,19 +341,54 @@ export default function Settings() {
                   </p>
                   <form 
                     className="flex space-x-2"
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault()
                       if (!tmdbApiKey) return
                       
-                      // Save to localStorage
-                      localStorage.setItem('tmdb_api_key', tmdbApiKey)
-                      setTmdbKeySuccess(true)
+                      setIsValidating(true)
                       
-                      // Clear success message after 3 seconds
-                      setTimeout(() => setTmdbKeySuccess(false), 3000)
-                      
-                      // Refresh addons to use the new API key
-                      refreshAddons()
+                      try {
+                        // Get the TMDB addon URL from the addons context
+                        const tmdbAddon = addons.find(addon => 
+                          addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb')
+                        )
+                        
+                        if (tmdbAddon && tmdbAddon.manifestUrl) {
+                          const baseUrl = tmdbAddon.manifestUrl.replace('/manifest.json', '')
+                          const response = await fetch(`${baseUrl}/validate-key?apikey=${tmdbApiKey}`)
+                          const data = await response.json()
+                          
+                          if (response.ok && data.valid) {
+                            // API key is valid, save to localStorage
+                            localStorage.setItem('tmdb_api_key', tmdbApiKey)
+                            setTmdbKeySuccess(true)
+                            setTmdbKeyError(null)
+                            
+                            // Clear success message after 3 seconds
+                            setTimeout(() => setTmdbKeySuccess(false), 3000)
+                            
+                            // Refresh addons to use the new API key
+                            refreshAddons()
+                          } else {
+                            // API key is invalid
+                            setTmdbKeyError(data.detail || 'Invalid API key')
+                            setTmdbKeySuccess(false)
+                          }
+                        } else {
+                          // No TMDB addon found, just save the key
+                          localStorage.setItem('tmdb_api_key', tmdbApiKey)
+                          setTmdbKeySuccess(true)
+                          setTmdbKeyError(null)
+                          setTimeout(() => setTmdbKeySuccess(false), 3000)
+                          refreshAddons()
+                        }
+                      } catch (error) {
+                        console.error('Error validating API key:', error)
+                        setTmdbKeyError('Error validating API key. Please try again.')
+                        setTmdbKeySuccess(false)
+                      } finally {
+                        setIsValidating(false)
+                      }
                     }}
                   >
                     <input
@@ -363,14 +400,25 @@ export default function Settings() {
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
-                      disabled={!tmdbApiKey}
+                      className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center"
+                      disabled={!tmdbApiKey || isValidating}
                     >
-                      Save
+                      {isValidating ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Validating
+                        </>
+                      ) : 'Save'}
                     </button>
                   </form>
                   {tmdbKeySuccess && (
                     <p className="mt-2 text-sm text-green-500">API key saved successfully!</p>
+                  )}
+                  {tmdbKeyError && (
+                    <p className="mt-2 text-sm text-red-500">{tmdbKeyError}</p>
                   )}
                 </div>
               </div>

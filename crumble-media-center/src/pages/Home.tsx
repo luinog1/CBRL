@@ -124,9 +124,10 @@ if (addons.length === 0) {
 }
 
 if (contentError) {
-  // Check if there's no TMDB API key set
+  // Check if there's no TMDB API key set or if the key is invalid
   const hasTmdbApiKey = localStorage.getItem('tmdb_api_key');
-  const isTmdbKeyError = !hasTmdbApiKey && addons.some(addon => addon.id.startsWith('tmdb'));
+  const isTmdbKeyError = (!hasTmdbApiKey || contentError.includes('Invalid TMDB API key')) && 
+    addons.some(addon => addon.id.startsWith('tmdb') || addon.id.startsWith('org.crumble.tmdb'));
   
   return (
     <div className="h-full flex items-center justify-center">
@@ -135,12 +136,16 @@ if (contentError) {
         <p className="text-white/70 text-lg mb-4">{contentError}</p>
         {isTmdbKeyError ? (
           <>
-            <p className="text-white/70 mb-4">You need to set up your TMDB API key to fetch content.</p>
+            <p className="text-white/70 mb-4">
+              {!hasTmdbApiKey 
+                ? "You need to set up your TMDB API key to fetch content." 
+                : "The TMDB API key you provided is invalid or has expired."}
+            </p>
             <Link 
               to="/settings?tab=api" 
               className="mt-4 inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-semibold transition-all hover:scale-105"
             >
-              Set TMDB API Key
+              {!hasTmdbApiKey ? "Set TMDB API Key" : "Update TMDB API Key"}
             </Link>
           </>
         ) : (
